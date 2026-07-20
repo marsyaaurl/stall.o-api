@@ -1,6 +1,7 @@
 {
   "name": "stall.o-api",
   "version": "1.0.0",
+  "type": "module",
   "description": "\"# stall.o-api\"",
   "main": "index.js",
   "scripts": {
