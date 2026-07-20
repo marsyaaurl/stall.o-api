@@ -1,0 +1,494 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// USER & AUTHENTICATION
+// ============================================================
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  name         String
+  avatarUrl    String?
+
+  role         UserRole   @default(SELLER)
+  status       UserStatus @default(ACTIVE)
+
+  // Google OAuth information
+  provider     AuthProvider @default(GOOGLE)
+  providerId   String       @unique
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relationships
+  sellerProfile      SellerProfile?
+  reservations       Reservation[]
+  approvedReservations Reservation[] @relation("ApprovedBy")
+  rejectedReservations Reservation[] @relation("RejectedBy")
+
+  stockingSessions   StockingSession[]
+  orders             CustomerOrder[]
+
+  products      Product[]
+  productBatches ProductBatch[]
+}
+
+
+// ============================================================
+// SELLER PROFILE
+// ============================================================
+
+model SellerProfile {
+  id              String   @id @default(uuid())
+
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  businessName    String
+  businessDescription String?
+  phoneNumber     String?
+  businessAddress String?
+  logoUrl         String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+
+// ============================================================
+// VENDING MACHINE
+// ============================================================
+
+model VendingMachine {
+  id              String          @id @default(uuid())
+
+  machineCode     String          @unique
+  name            String
+
+  locationName    String
+  address         String
+
+  latitude        Decimal?
+  longitude       Decimal?
+
+  status          MachineStatus   @default(ACTIVE)
+
+  // QR code used by customers to open this machine's digital page
+  customerQrCode  String          @unique
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relationships
+  slots           MachineSlot[]
+  reservations    Reservation[]
+  stockingSessions StockingSession[]
+  orders          CustomerOrder[]
+}
+
+
+// ============================================================
+// MACHINE SLOT
+// ============================================================
+
+model MachineSlot {
+  id              String          @id @default(uuid())
+
+  machineId       String
+  machine         VendingMachine  @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  slotCode        String
+  slotNumber      Int
+
+  capacity        Int             @default(1)
+
+  status          SlotStatus      @default(AVAILABLE)
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relationships
+  reservationSlots ReservationSlot[]
+  productBatches   ProductBatch[]
+
+  @@unique([machineId, slotCode])
+}
+
+
+// ============================================================
+// PRODUCT
+// ============================================================
+
+model Product {
+  id              String        @id @default(uuid())
+
+  sellerId        String
+  seller          User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  name            String
+  description     String?
+
+  imageUrl        String?
+
+  category        ProductCategory
+
+  // Product-level information
+  defaultPrice    Decimal       @db.Decimal(12, 2)
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Relationships
+  batches         ProductBatch[]
+}
+
+
+// ============================================================
+// RESERVATION
+// ============================================================
+
+model Reservation {
+  id              String             @id @default(uuid())
+
+  reservationCode String             @unique
+
+  sellerId        String
+  seller          User               @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  machineId       String
+  machine         VendingMachine     @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  // Reservation period
+  reservationDate DateTime
+  startTime       DateTime
+  endTime         DateTime
+
+  status          ReservationStatus   @default(PENDING)
+
+  // Operator approval
+  approvedById    String?
+  approvedBy      User?              @relation("ApprovedBy", fields: [approvedById], references: [id])
+
+  approvedAt      DateTime?
+
+  rejectedById    String?
+  rejectedBy      User?              @relation("RejectedBy", fields: [rejectedById], references: [id])
+
+  rejectedAt      DateTime?
+  rejectionReason String?
+
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  // Relationships
+  slots           ReservationSlot[]
+  stockingSession StockingSession?
+  productBatches  ProductBatch[]
+}
+
+
+// ============================================================
+// RESERVATION SLOT
+// ============================================================
+
+model ReservationSlot {
+  id              String         @id @default(uuid())
+
+  reservationId   String
+  reservation     Reservation    @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  machineSlotId   String
+  machineSlot     MachineSlot    @relation(fields: [machineSlotId], references: [id], onDelete: Cascade)
+
+  createdAt       DateTime       @default(now())
+
+  @@unique([reservationId, machineSlotId])
+}
+
+
+// ============================================================
+// PRODUCT BATCH
+// ============================================================
+
+model ProductBatch {
+  id                  String             @id @default(uuid())
+
+  productId           String
+  product             Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  sellerId            String
+  seller              User               @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  reservationId       String
+  reservation         Reservation        @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  machineSlotId       String
+  machineSlot         MachineSlot        @relation(fields: [machineSlotId], references: [id], onDelete: Cascade)
+
+  // Batch information
+  batchCode           String
+
+  quantity            Int
+  remainingQuantity   Int
+
+  price               Decimal            @db.Decimal(12, 2)
+  originalPrice       Decimal            @db.Decimal(12, 2)
+
+  // Important for food
+  manufacturedAt      DateTime?
+  expiresAt           DateTime
+
+  status              ProductBatchStatus @default(ACTIVE)
+
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  // Relationships
+  expirationPolicy    ExpirationPolicy?
+  orderItems          OrderItem[]
+
+  @@unique([batchCode])
+}
+
+
+// ============================================================
+// EXPIRATION POLICY
+// ============================================================
+
+model ExpirationPolicy {
+  id                  String             @id @default(uuid())
+
+  productBatchId      String             @unique
+  productBatch        ProductBatch      @relation(fields: [productBatchId], references: [id], onDelete: Cascade)
+
+  // How many hours before expiry the action should happen
+  thresholdHours      Int
+
+  action              ExpirationAction
+
+  // Discount percentage if action is DISCOUNT
+  discountPercentage  Decimal?           @db.Decimal(5, 2)
+
+  // If seller wants to pick up the product
+  pickupDeadline      DateTime?
+
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+
+// ============================================================
+// STOCKING SESSION
+// ============================================================
+
+model StockingSession {
+  id              String             @id @default(uuid())
+
+  reservationId   String             @unique
+  reservation     Reservation        @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  sellerId        String
+  seller           User              @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+
+  machineId        String
+  machine          VendingMachine    @relation(fields: [machineId], references: [id], onDelete: Cascade)
+
+  // Temporary authorization token
+  accessToken      String            @unique
+
+  accessCode       String            @unique
+
+  expiresAt        DateTime
+
+  status           StockingStatus    @default(PENDING)
+
+  startedAt        DateTime?
+  completedAt      DateTime?
+
+  createdAt        DateTime          @default(now())
+}
+
+
+// ============================================================
+// CUSTOMER ORDERS
+// ============================================================
+
+model CustomerOrder {
+  id              String          @id @default(uuid())
+
+  orderCode       String          @unique
+
+  // Customer can be anonymous or logged in
+  customerId       String?
+  customer         User?          @relation(fields: [customerId], references: [id])
+
+  machineId        String
+  machine          VendingMachine @relation(fields: [machineId], references: [id])
+
+  totalAmount      Decimal         @db.Decimal(12, 2)
+
+  status           OrderStatus     @default(PENDING)
+
+  paymentStatus    PaymentStatus   @default(PENDING)
+
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  // Relationships
+  items            OrderItem[]
+  pickupCode       PickupCode?
+}
+
+
+// ============================================================
+// ORDER ITEMS
+// ============================================================
+
+model OrderItem {
+  id              String        @id @default(uuid())
+
+  orderId         String
+  order            CustomerOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productBatchId  String
+  productBatch    ProductBatch  @relation(fields: [productBatchId], references: [id])
+
+  quantity        Int
+
+  unitPrice       Decimal       @db.Decimal(12, 2)
+
+  subtotal        Decimal       @db.Decimal(12, 2)
+
+  createdAt       DateTime      @default(now())
+}
+
+
+// ============================================================
+// PICKUP CODE
+// ============================================================
+
+model PickupCode {
+  id              String        @id @default(uuid())
+
+  orderId         String        @unique
+  order            CustomerOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  code            String        @unique
+
+  status          PickupCodeStatus @default(UNUSED)
+
+  expiresAt       DateTime
+
+  usedAt          DateTime?
+
+  createdAt       DateTime      @default(now())
+}
+
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum UserRole {
+  SELLER
+  OPERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum AuthProvider {
+  GOOGLE
+}
+
+enum MachineStatus {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum SlotStatus {
+  AVAILABLE
+  RESERVED
+  OCCUPIED
+  MAINTENANCE
+}
+
+enum ReservationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  COMPLETED
+}
+
+enum ProductCategory {
+  FOOD
+  DRINK
+  SNACK
+  DESSERT
+  OTHER
+}
+
+enum ProductBatchStatus {
+  ACTIVE
+  SOLD_OUT
+  EXPIRED
+  DISCOUNTED
+  DONATED
+  REMOVED
+  PICKUP_PENDING
+  PICKED_UP
+}
+
+enum ExpirationAction {
+  DISCOUNT
+  REMOVE
+  DONATE
+  SELLER_PICKUP
+}
+
+enum StockingStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  READY_FOR_PICKUP
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PickupCodeStatus {
+  UNUSED
+  USED
+  EXPIRED
+}
