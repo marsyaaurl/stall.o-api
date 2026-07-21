@@ -14,16 +14,19 @@ router.get(
   }),
 );
 
-router.get(
-  "/google/callback",
-  passport.authenticate("google", {
-    session: false,
-  }),
-  (req, res) => {
-    const user = req.user as any;
+router.get("/google/callback", (req, res, next) => {
+  passport.authenticate("google", { session: false }, (err: any, user: any) => {
+    if (err) {
+      console.error("❌ Google OAuth Callback Error:", err);
+      res.status(500).json({
+        message: "Google OAuth authentication failed",
+        error: err.message || String(err),
+      });
+      return;
+    }
 
     if (!user) {
-      res.status(401).json({ message: "Authentication failed" });
+      res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
       return;
     }
 
@@ -33,11 +36,10 @@ router.get(
       role: user.role,
     });
 
-    res.redirect(
-      `${process.env.FRONTEND_URL}/auth/callback?token=${token}`,
-    );
-  },
-);
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+  })(req, res, next);
+});
 
 router.get("/me", authenticateJWT, async (req, res) => {
   try {

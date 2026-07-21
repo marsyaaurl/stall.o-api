@@ -8,20 +8,28 @@ router.get("/google", passport.authenticate("google", {
     scope: ["profile", "email"],
     session: false,
 }));
-router.get("/google/callback", passport.authenticate("google", {
-    session: false,
-}), (req, res) => {
-    const user = req.user;
-    if (!user) {
-        res.status(401).json({ message: "Authentication failed" });
-        return;
-    }
-    const token = generateToken({
-        id: user.id,
-        email: user.email,
-        role: user.role,
-    });
-    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}`);
+router.get("/google/callback", (req, res, next) => {
+    passport.authenticate("google", { session: false }, (err, user) => {
+        if (err) {
+            console.error("❌ Google OAuth Callback Error:", err);
+            res.status(500).json({
+                message: "Google OAuth authentication failed",
+                error: err.message || String(err),
+            });
+            return;
+        }
+        if (!user) {
+            res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
+            return;
+        }
+        const token = generateToken({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+        });
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+        res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+    })(req, res, next);
 });
 router.get("/me", authenticateJWT, async (req, res) => {
     try {
