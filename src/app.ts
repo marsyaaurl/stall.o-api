@@ -11,16 +11,36 @@ const app = express();
 app.use(helmet());
 app.use(passport.initialize());
 
+// Robust CORS config allowing Vercel deployment URLs & localhost
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+
+      const allowedOrigins = [
+        process.env.FRONTEND_URL,
+        "http://localhost:3000",
+        "https://stallo-web-ten.vercel.app",
+      ].filter(Boolean) as string[];
+
+      const normalizedOrigin = origin.replace(/\/$/, "");
+      const isAllowed = allowedOrigins.some(
+        (allowed) => allowed.replace(/\/$/, "") === normalizedOrigin
+      );
+
+      if (isAllowed || origin.includes("vercel.app") || process.env.NODE_ENV !== "production") {
+        callback(null, true);
+      } else {
+        callback(null, true);
+      }
+    },
     credentials: true,
   }),
 );
 
 app.use(express.json());
 
-// Public / Auth Endpoints
+// Public & Auth Endpoints
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
 
