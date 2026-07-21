@@ -11,13 +11,16 @@ passport.use(new GoogleStrategy({
         if (!email) {
             return done(new Error("Google account does not have an email"), false);
         }
+        // Upsert by unique email to prevent unique constraint collisions
         const user = await prisma.user.upsert({
             where: {
-                providerId: profile.id,
+                email,
             },
             update: {
                 name: profile.displayName,
                 avatarUrl: profile.photos?.[0]?.value,
+                providerId: profile.id,
+                provider: "GOOGLE",
             },
             create: {
                 email,
@@ -31,6 +34,7 @@ passport.use(new GoogleStrategy({
         return done(null, user);
     }
     catch (error) {
+        console.error("Passport Google Strategy error:", error);
         return done(error, false);
     }
 }));

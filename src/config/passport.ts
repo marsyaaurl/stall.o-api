@@ -30,14 +30,17 @@ passport.use(
           );
         }
 
+        // Upsert by unique email to prevent unique constraint collisions
         const user = await prisma.user.upsert({
           where: {
-            providerId: profile.id,
+            email,
           },
 
           update: {
             name: profile.displayName,
             avatarUrl: profile.photos?.[0]?.value,
+            providerId: profile.id,
+            provider: "GOOGLE",
           },
 
           create: {
@@ -52,7 +55,8 @@ passport.use(
 
         return done(null, user);
       } catch (error) {
-        return done(error, false);
+        console.error("Passport Google Strategy error:", error);
+        return done(error as Error, false);
       }
     },
   ),
