@@ -1,8 +1,8 @@
 import { Router } from "express";
-import passport from "../../config/passport.js";
-import { generateToken } from "../../utils/jwt.js";
-import { authenticateJWT } from "../../middleware/auth.middleware.js";
-import { prisma } from "../../config/prisma.js";
+import passport from "../../../config/passport.js";
+import { generateToken } from "../../../utils/jwt.js";
+import { authenticateJWT } from "../../../middleware/auth.middleware.js";
+import { prisma } from "../../../config/prisma.js";
 const router = Router();
 router.get("/google", passport.authenticate("google", {
     scope: ["profile", "email"],

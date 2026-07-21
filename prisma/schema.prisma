@@ -404,6 +404,7 @@ model PickupCode {
 enum UserRole {
   SELLER
   OPERATOR
+  CUSTOMER
   ADMIN
 }
 

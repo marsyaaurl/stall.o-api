@@ -1,12 +1,16 @@
 import { Router } from "express";
-import passport from "passport";
+import passport from "./../../config/passport.js";
 const router = Router();
 router.get("/google", passport.authenticate("google", {
     scope: ["profile", "email"],
+    session: false,
 }));
 router.get("/google/callback", passport.authenticate("google", {
-    failureRedirect: "/login",
+    session: false,
 }), (req, res) => {
-    res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+    res.json({
+        message: "Google login successful",
+        user: req.user,
+    });
 });
 export default router;

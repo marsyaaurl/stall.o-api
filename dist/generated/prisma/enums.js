@@ -10,6 +10,7 @@
 export const UserRole = {
     SELLER: 'SELLER',
     OPERATOR: 'OPERATOR',
+    CUSTOMER: 'CUSTOMER',
     ADMIN: 'ADMIN'
 };
 export const UserStatus = {
