@@ -143,6 +143,8 @@ model Product {
   imageUrl        String?
 
   category        ProductCategory
+  status          ProductStatus   @default(ACTIVE)
+  shelfLifeHours  Int?
 
   // Product-level information
   defaultPrice    Decimal       @db.Decimal(12, 2)
@@ -151,7 +153,22 @@ model Product {
   updatedAt       DateTime      @updatedAt
 
   // Relationships
-  batches         ProductBatch[]
+  batches          ProductBatch[]
+  expirationPolicy ExpirationPolicy?
+}
+
+model ExpirationPolicy {
+  id                       String           @id @default(uuid())
+  productId                String           @unique
+  product                  Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  discountEnabled          Boolean          @default(true)
+  discountPercentage       Int              @default(20)
+  discountStartHoursBefore Int              @default(4)
+  finalAction              ExpirationAction @default(SELLER_PICKUP)
+
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime         @updatedAt
 }
 
 
@@ -256,36 +273,9 @@ model ProductBatch {
   updatedAt           DateTime            @updatedAt
 
   // Relationships
-  expirationPolicy    ExpirationPolicy?
   orderItems          OrderItem[]
 
   @@unique([batchCode])
-}
-
-
-// ============================================================
-// EXPIRATION POLICY
-// ============================================================
-
-model ExpirationPolicy {
-  id                  String             @id @default(uuid())
-
-  productBatchId      String             @unique
-  productBatch        ProductBatch      @relation(fields: [productBatchId], references: [id], onDelete: Cascade)
-
-  // How many hours before expiry the action should happen
-  thresholdHours      Int
-
-  action              ExpirationAction
-
-  // Discount percentage if action is DISCOUNT
-  discountPercentage  Decimal?           @db.Decimal(5, 2)
-
-  // If seller wants to pick up the product
-  pickupDeadline      DateTime?
-
-  createdAt            DateTime           @default(now())
-  updatedAt            DateTime           @updatedAt
 }
 
 
@@ -438,6 +428,11 @@ enum ReservationStatus {
   COMPLETED
 }
 
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+}
+
 enum ProductCategory {
   FOOD
   DRINK
@@ -460,8 +455,9 @@ enum ProductBatchStatus {
 enum ExpirationAction {
   DISCOUNT
   REMOVE
-  DONATE
   SELLER_PICKUP
+  DONATE
+  DISCARD
 }
 
 enum StockingStatus {

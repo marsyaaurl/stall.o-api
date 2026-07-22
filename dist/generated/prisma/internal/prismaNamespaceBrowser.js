@@ -44,10 +44,10 @@ export const ModelName = {
     VendingMachine: 'VendingMachine',
     MachineSlot: 'MachineSlot',
     Product: 'Product',
+    ExpirationPolicy: 'ExpirationPolicy',
     Reservation: 'Reservation',
     ReservationSlot: 'ReservationSlot',
     ProductBatch: 'ProductBatch',
-    ExpirationPolicy: 'ExpirationPolicy',
     StockingSession: 'StockingSession',
     CustomerOrder: 'CustomerOrder',
     OrderItem: 'OrderItem',
@@ -115,7 +115,19 @@ export const ProductScalarFieldEnum = {
     description: 'description',
     imageUrl: 'imageUrl',
     category: 'category',
+    status: 'status',
+    shelfLifeHours: 'shelfLifeHours',
     defaultPrice: 'defaultPrice',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+};
+export const ExpirationPolicyScalarFieldEnum = {
+    id: 'id',
+    productId: 'productId',
+    discountEnabled: 'discountEnabled',
+    discountPercentage: 'discountPercentage',
+    discountStartHoursBefore: 'discountStartHoursBefore',
+    finalAction: 'finalAction',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };
@@ -156,16 +168,6 @@ export const ProductBatchScalarFieldEnum = {
     manufacturedAt: 'manufacturedAt',
     expiresAt: 'expiresAt',
     status: 'status',
-    createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
-};
-export const ExpirationPolicyScalarFieldEnum = {
-    id: 'id',
-    productBatchId: 'productBatchId',
-    thresholdHours: 'thresholdHours',
-    action: 'action',
-    discountPercentage: 'discountPercentage',
-    pickupDeadline: 'pickupDeadline',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };

@@ -38,6 +38,10 @@ export const ReservationStatus = {
     CANCELLED: 'CANCELLED',
     COMPLETED: 'COMPLETED'
 };
+export const ProductStatus = {
+    ACTIVE: 'ACTIVE',
+    INACTIVE: 'INACTIVE'
+};
 export const ProductCategory = {
     FOOD: 'FOOD',
     DRINK: 'DRINK',
@@ -58,8 +62,9 @@ export const ProductBatchStatus = {
 export const ExpirationAction = {
     DISCOUNT: 'DISCOUNT',
     REMOVE: 'REMOVE',
+    SELLER_PICKUP: 'SELLER_PICKUP',
     DONATE: 'DONATE',
-    SELLER_PICKUP: 'SELLER_PICKUP'
+    DISCARD: 'DISCARD'
 };
 export const StockingStatus = {
     PENDING: 'PENDING',

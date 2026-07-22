@@ -5,6 +5,7 @@ import passport from "./config/passport.js";
 import authRoutes from "./modules/public/auth/auth.routes.js";
 import healthRoutes from "./modules/public/health/health.routes.js";
 import sellerDashboardRoutes from "./modules/seller/dashboard/seller-dashboard.routes.js";
+import sellerProductsRoutes from "./modules/seller/products/products.routes.js";
 
 const app = express();
 
@@ -38,7 +39,8 @@ app.use(
   }),
 );
 
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Public & Auth Endpoints
 app.use("/api/auth", authRoutes);
@@ -46,5 +48,6 @@ app.use("/api/health", healthRoutes);
 
 // Seller Sub-Domain Endpoints
 app.use("/api/seller", sellerDashboardRoutes);
+app.use("/api/seller/products", sellerProductsRoutes);
 
 export default app;
