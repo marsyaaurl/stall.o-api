@@ -9,6 +9,7 @@ import sellerProductsRoutes from "./modules/seller/products/products.routes.js";
 import sellerMachinesRoutes from "./modules/seller/machines/machine.routes.js";
 import sellerReservationsRoutes from "./modules/seller/reservations/reservations.routes.js";
 import sellerInventoryRoutes from "./modules/seller/inventory/inventory.routes.js";
+import sellerSalesRoutes from "./modules/seller/sales/sales.routes.js";
 
 const app = express();
 
@@ -55,5 +56,6 @@ app.use("/api/seller/products", sellerProductsRoutes);
 app.use("/api/seller/machines", sellerMachinesRoutes);
 app.use("/api/seller/reservations", sellerReservationsRoutes);
 app.use("/api/seller/inventory", sellerInventoryRoutes);
+app.use("/api/seller/sales", sellerSalesRoutes);
 
 export default app;

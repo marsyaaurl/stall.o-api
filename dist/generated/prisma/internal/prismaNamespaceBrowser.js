@@ -95,6 +95,8 @@ export const VendingMachineScalarFieldEnum = {
     longitude: 'longitude',
     status: 'status',
     customerQrCode: 'customerQrCode',
+    temperature: 'temperature',
+    humidity: 'humidity',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
 };

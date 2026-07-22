@@ -39,6 +39,8 @@ export async function getSellerMachines(query: GetMachineQuerySchema) {
       locationName: m.locationName,
       address: m.address,
       status: m.status,
+      temperature: m.temperature,
+      humidity: m.humidity,
       totalSlots,
       availableSlots,
     };
@@ -73,6 +75,8 @@ export async function getSellerMachineById(machineId: string) {
     status: machine.status,
     locationName: machine.locationName,
     address: machine.address,
+    temperature: machine.temperature,
+    humidity: machine.humidity,
     slots: machine.slots.map((s) => ({
       id: s.id,
       code: s.slotCode,

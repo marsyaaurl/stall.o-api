@@ -47,6 +47,8 @@ async function main() {
       locationName: "Universitas XYZ",
       address: "Building 2 Lobby, 1st Floor, Jalan Raya Kampus A",
       customerQrCode: "qr-mac-001",
+      temperature: 4.2,
+      humidity: 45.0,
     },
     {
       machineCode: "MAC-002",
@@ -54,6 +56,8 @@ async function main() {
       locationName: "Universitas XYZ",
       address: "Library Main Entrance, Jalan Perpustakaan No. 4",
       customerQrCode: "qr-mac-002",
+      temperature: 3.8,
+      humidity: 42.0,
     },
     {
       machineCode: "MAC-003",
@@ -61,13 +65,18 @@ async function main() {
       locationName: "Universitas XYZ",
       address: "Student Center Annex, Cafeteria Courtyard",
       customerQrCode: "qr-mac-003",
+      temperature: 4.5,
+      humidity: 48.0,
     },
   ];
 
   for (const m of machines) {
     const createdMachine = await prisma.vendingMachine.upsert({
       where: { machineCode: m.machineCode },
-      update: {},
+      update: {
+        temperature: m.temperature,
+        humidity: m.humidity,
+      },
       create: {
         machineCode: m.machineCode,
         name: m.name,
@@ -75,6 +84,8 @@ async function main() {
         address: m.address,
         status: "ACTIVE",
         customerQrCode: m.customerQrCode,
+        temperature: m.temperature,
+        humidity: m.humidity,
       },
     });
 
