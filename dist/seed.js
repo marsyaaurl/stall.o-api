@@ -130,7 +130,7 @@ async function main() {
             reservationDate: now,
             startTime: now,
             endTime,
-            status: "APPROVED",
+            status: "COMPLETED",
             slots: {
                 create: [
                     { machineSlotId: slotA1.id },

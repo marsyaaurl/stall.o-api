@@ -155,6 +155,7 @@ model Product {
   // Relationships
   batches          ProductBatch[]
   expirationPolicy ExpirationPolicy?
+  reservations     Reservation[]
 }
 
 model ExpirationPolicy {
@@ -208,6 +209,10 @@ model Reservation {
 
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
+
+  productId              String?
+  product                Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
+  expectedDailyQuantity  Int?
 
   // Relationships
   slots           ReservationSlot[]
@@ -422,8 +427,6 @@ enum SlotStatus {
 
 enum ReservationStatus {
   PENDING
-  APPROVED
-  REJECTED
   CANCELLED
   COMPLETED
 }

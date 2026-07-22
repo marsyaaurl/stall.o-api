@@ -146,7 +146,9 @@ export const ReservationScalarFieldEnum = {
     rejectedAt: 'rejectedAt',
     rejectionReason: 'rejectionReason',
     createdAt: 'createdAt',
-    updatedAt: 'updatedAt'
+    updatedAt: 'updatedAt',
+    productId: 'productId',
+    expectedDailyQuantity: 'expectedDailyQuantity'
 };
 export const ReservationSlotScalarFieldEnum = {
     id: 'id',

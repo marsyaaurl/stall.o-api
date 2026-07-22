@@ -50,7 +50,7 @@ export async function getSellerDashboardData(sellerId) {
         prisma.reservation.findMany({
             where: {
                 sellerId,
-                status: "APPROVED",
+                status: "PENDING",
                 startTime: { gte: now, lte: sixtyMinutesFromNow },
             },
             include: { machine: true },
@@ -60,7 +60,7 @@ export async function getSellerDashboardData(sellerId) {
         prisma.reservation.findMany({
             where: {
                 sellerId,
-                status: { in: ["PENDING", "APPROVED"] },
+                status: { in: ["PENDING", "COMPLETED"] },
             },
             include: {
                 machine: true,

@@ -6,6 +6,9 @@ import authRoutes from "./modules/public/auth/auth.routes.js";
 import healthRoutes from "./modules/public/health/health.routes.js";
 import sellerDashboardRoutes from "./modules/seller/dashboard/seller-dashboard.routes.js";
 import sellerProductsRoutes from "./modules/seller/products/products.routes.js";
+import sellerMachinesRoutes from "./modules/seller/machines/machine.routes.js";
+import sellerReservationsRoutes from "./modules/seller/reservations/reservations.routes.js";
+import sellerInventoryRoutes from "./modules/seller/inventory/inventory.routes.js";
 const app = express();
 app.use(helmet());
 app.use(passport.initialize());
@@ -38,4 +41,7 @@ app.use("/api/health", healthRoutes);
 // Seller Sub-Domain Endpoints
 app.use("/api/seller", sellerDashboardRoutes);
 app.use("/api/seller/products", sellerProductsRoutes);
+app.use("/api/seller/machines", sellerMachinesRoutes);
+app.use("/api/seller/reservations", sellerReservationsRoutes);
+app.use("/api/seller/inventory", sellerInventoryRoutes);
 export default app;
