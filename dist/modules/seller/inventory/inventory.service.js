@@ -1,5 +1,46 @@
 import { prisma } from "../../../config/prisma.js";
+export async function cleanupExpiredBatches() {
+    const now = new Date();
+    // 1. Find all ACTIVE/DISCOUNTED batches that have expired
+    const expiredBatches = await prisma.productBatch.findMany({
+        where: {
+            status: { in: ["ACTIVE", "DISCOUNTED"] },
+            expiresAt: { lt: now },
+        },
+        select: {
+            id: true,
+            machineSlotId: true,
+        },
+    });
+    if (expiredBatches.length === 0)
+        return;
+    // 2. Mark them as EXPIRED in the database
+    const expiredIds = expiredBatches.map(b => b.id);
+    await prisma.productBatch.updateMany({
+        where: { id: { in: expiredIds } },
+        data: { status: "EXPIRED" },
+    });
+    // 3. For each unique slot, check if it has any remaining active batches
+    const slotIds = Array.from(new Set(expiredBatches.map(b => b.machineSlotId)));
+    for (const slotId of slotIds) {
+        const activeBatchesInSlot = await prisma.productBatch.count({
+            where: {
+                machineSlotId: slotId,
+                status: { in: ["ACTIVE", "DISCOUNTED"] },
+            },
+        });
+        // If no active batches remain in this slot, set its status back to AVAILABLE
+        if (activeBatchesInSlot === 0) {
+            await prisma.machineSlot.update({
+                where: { id: slotId },
+                data: { status: "AVAILABLE" },
+            });
+        }
+    }
+}
 export async function getSellerInventory(sellerId, query) {
+    // Automatically clean up expired batches in DB on load
+    await cleanupExpiredBatches();
     const { search, machineId, productId, status, page = 1, limit = 20 } = query;
     const now = new Date();
     const expiringLimit = new Date(now.getTime() + 4 * 60 * 60 * 1000);
@@ -35,7 +76,7 @@ export async function getSellerInventory(sellerId, query) {
     const getItemStatus = (batch) => {
         if (batch.remainingQuantity === 0)
             return "SOLD_OUT";
-        if (batch.expiresAt < now)
+        if (batch.status === "EXPIRED" || batch.expiresAt < now)
             return "EXPIRED";
         if (batch.expiresAt <= expiringLimit)
             return "EXPIRING_SOON";
@@ -49,12 +90,15 @@ export async function getSellerInventory(sellerId, query) {
     let expiringSoonCount = 0;
     const mappedItems = allBatches.map((b) => {
         const itemStatus = getItemStatus(b);
-        totalUnits += b.remainingQuantity;
-        if (b.remainingQuantity > 0 && b.remainingQuantity <= 2) {
-            lowStockCount++;
-        }
-        if (b.remainingQuantity > 0 && b.expiresAt >= now && b.expiresAt <= expiringLimit) {
-            expiringSoonCount++;
+        // Only count active (non-expired) units in the summary cards
+        if (itemStatus !== "EXPIRED") {
+            totalUnits += b.remainingQuantity;
+            if (b.remainingQuantity > 0 && b.remainingQuantity <= 2) {
+                lowStockCount++;
+            }
+            if (b.remainingQuantity > 0 && b.expiresAt >= now && b.expiresAt <= expiringLimit) {
+                expiringSoonCount++;
+            }
         }
         return {
             id: b.id,

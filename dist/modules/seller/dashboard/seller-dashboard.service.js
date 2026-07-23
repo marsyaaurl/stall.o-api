@@ -1,5 +1,7 @@
 import { prisma } from "../../../config/prisma.js";
+import { cleanupExpiredBatches } from "../inventory/inventory.service.js";
 export async function getSellerDashboardData(sellerId) {
+    await cleanupExpiredBatches();
     const now = new Date();
     const fourHoursFromNow = new Date(now.getTime() + 4 * 60 * 60 * 1000);
     const sixtyMinutesFromNow = new Date(now.getTime() + 60 * 60 * 1000);

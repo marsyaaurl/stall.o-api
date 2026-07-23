@@ -238,6 +238,7 @@ export async function getTransactions(sellerId, query) {
         })
     ]);
     const data = transactions.map((item) => ({
+        id: item.id,
         orderId: item.orderId,
         productName: item.productBatch.product.name,
         machineName: item.order.machine.name,

@@ -10,6 +10,7 @@ import sellerMachinesRoutes from "./modules/seller/machines/machine.routes.js";
 import sellerReservationsRoutes from "./modules/seller/reservations/reservations.routes.js";
 import sellerInventoryRoutes from "./modules/seller/inventory/inventory.routes.js";
 import sellerSalesRoutes from "./modules/seller/sales/sales.routes.js";
+import customerRoutes from "./modules/customer/customer.routes.js";
 
 const app = express();
 
@@ -49,6 +50,7 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 // Public & Auth Endpoints
 app.use("/api/auth", authRoutes);
 app.use("/api/health", healthRoutes);
+app.use("/api/customer", customerRoutes);
 
 // Seller Sub-Domain Endpoints
 app.use("/api/seller", sellerDashboardRoutes);
